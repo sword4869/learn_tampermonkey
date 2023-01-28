@@ -55,5 +55,5 @@
     }
 
     window.addEventListener('hashchange', addButton);
-    window.onload = addButton；
+    window.onload = addButton;
 })();
