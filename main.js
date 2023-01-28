@@ -4,8 +4,7 @@
 // @version      0.1
 // @description  try to take over the world!
 // @author       sword4869
-// @match        https://music.163.com//*
-// @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
+// @match        https://music.163.com/*
 // @grant        none
 // ==/UserScript==
 
@@ -56,5 +55,5 @@
     }
 
     window.addEventListener('hashchange', addButton);
-
+    window.onload = addButton；
 })();
