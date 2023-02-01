@@ -15,6 +15,45 @@
     status_txt.innerText = 10;
 
 
+    // 判断浏览器
+    // msie：是否是ie，若不是返回false
+    // gecko：是否是gecko，若是返回true
+    // edge等一般都是 Browser.ie = false, Browser.Moz = true
+    let Browser = new Object();
+    Browser.userAgent = window.navigator.userAgent.toLowerCase();
+    Browser.ie = /msie/.test(Browser.userAgent);
+    Browser.Moz = /gecko/.test(Browser.userAgent);
+
+    //判断是否加载完成
+    function Imagess (url, callback, error) {
+        // 临时对象
+        let tmp_img = new Image();
+        if (Browser.ie) {
+            tmp_img.onreadystatechange = function () {
+                if (tmp_img.readyState == "complete" || tmp_img.readyState == "loaded") {
+                    callback(tmp_img);
+                }
+            }
+        } else {
+            tmp_img.onload = function () {
+                if (tmp_img.complete == true) {
+                    callback(tmp_img);
+                }
+            }
+        }
+        //如果因为网络或图片的原因发生异常，则显示该图片
+        if (error) {
+            tmp_img.onerror = error;
+
+        } else {
+            tmp_img.onerror = function () {
+                tmp_img.src = "http://sunbrightness.gitee.io/csdn-material/img_loading/failed.png"
+            }
+        }
+        tmp_img.src = url;
+    }
+
+
     function getTop(e) {
         let T = e.offsetTop;
         while (e = e.offsetParent) {
@@ -23,26 +62,64 @@
         return T;
     }
 
-    function exemplify(){
+    function addAttribute(){
+        let my_imgs = document.querySelector('.thread').querySelectorAll('img');
+        for (let i = 0; i < my_imgs.length; i++) {
+            let my_img = my_imgs[i];
+            my_img.setAttribute("data-src", my_img.parentElement.href);
+        }
+    }
+
+    // for bug: see load to which one.
+    let debug_loaded = 0;
+
+
+    function lazy_load(){
         let my_imgs = document.querySelector('.thread').querySelectorAll('img');
 
         let H = document.documentElement.clientHeight;//获取可视区域高度
         let S = document.documentElement.scrollTop || document.body.scrollTop;
 
-        let debug_max = 0
+        // for bug: see load to which one.
+        let debug_located = 0;
 
         // we want to replace link of small img to link of big img, but failed, because the width and height also need to accordingly change.
         for (let i = 0; i < my_imgs.length; i++) {
+            
+            // for debug: now_located
+            if (S > getTop(my_imgs[i])) {
+                if(i > debug_located){
+                    debug_located = i;
+                }
+            }
             const pre_load = H * parseInt(status_txt.innerText) + S
+
             if (pre_load > getTop(my_imgs[i])) {
-                my_imgs[i].src = my_imgs[i].parentElement.href
-                my_imgs[i].style = 'max-height: 100%; max-width: 100%';
-                if(i > debug_max){
-                    debug_max = i;
+                let my_img = my_imgs[i];
+                //防止重复加载
+                if (my_img.loading == true) {
+                    continue;
+                }
+                //没有该属性代表不加载
+                if (!my_img.getAttribute("data-src")) {
+                    continue;
+                }
+                my_img.loading = true;
+                // 这个tmp_img就是Imagess里的临时对象tmp_img
+                Imagess(my_img.getAttribute("data-src"), function (tmp_img) {
+                    // 加载成功则正确的url，或者加载失败放404的图
+                    my_img.src = tmp_img.src;
+                    my_img.style = 'max-height: 100%; max-width: 100%';
+                    my_img.removeAttribute("data-src");
+                });
+                
+                // for debug: 
+                if(i > debug_loaded){
+                    debug_loaded = i;
                 }
             }
         }
-        console.log(debug_max);
+        console.log(`debug_loaded = ${debug_loaded}, debug_located = ${debug_located}`);
     }
 
     function addElement() {
@@ -85,7 +162,10 @@
     }
 
     addElement();
-
-    window.onload = window.onscroll = exemplify;
+    window.onload = function(){
+        addAttribute();
+        lazy_load();
+    };
+    window.onscroll = lazy_load;
     
 })();
