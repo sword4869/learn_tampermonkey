@@ -81,45 +81,42 @@
         let S = document.documentElement.scrollTop || document.body.scrollTop;
 
         // for bug: see load to which one.
-        let debug_located = 0;
+        let img_located = 0;
 
-        // we want to replace link of small img to link of big img, but failed, because the width and height also need to accordingly change.
         for (let i = 0; i < my_imgs.length; i++) {
-            
             // for debug: now_located
             if (S > getTop(my_imgs[i])) {
-                if(i > debug_located){
-                    debug_located = i;
-                }
-            }
-            const pre_load = H * parseInt(status_txt.innerText) + S
-
-            if (pre_load > getTop(my_imgs[i])) {
-                let my_img = my_imgs[i];
-                //防止重复加载
-                if (my_img.loading == true) {
-                    continue;
-                }
-                //没有该属性代表不加载
-                if (!my_img.getAttribute("data-src")) {
-                    continue;
-                }
-                my_img.loading = true;
-                // 这个tmp_img就是Imagess里的临时对象tmp_img
-                Imagess(my_img.getAttribute("data-src"), function (tmp_img) {
-                    // 加载成功则正确的url，或者加载失败放404的图
-                    my_img.src = tmp_img.src;
-                    my_img.style = 'max-height: 100%; max-width: 100%';
-                    my_img.removeAttribute("data-src");
-                });
-                
-                // for debug: 
-                if(i > debug_loaded){
-                    debug_loaded = i;
+                if(i > img_located){
+                    img_located = i;
                 }
             }
         }
-        console.log(`debug_loaded = ${debug_loaded}, debug_located = ${debug_located}`);
+
+        for (let i = img_located; i < my_imgs.length && i < img_located + parseInt(status_txt.innerText); i++) {
+            let my_img = my_imgs[i];
+            //防止重复加载
+            if (my_img.loading == true) {
+                continue;
+            }
+            //没有该属性代表不加载
+            if (!my_img.getAttribute("data-src")) {
+                continue;
+            }
+            my_img.loading = true;
+            // 这个tmp_img就是Imagess里的临时对象tmp_img
+            Imagess(my_img.getAttribute("data-src"), function (tmp_img) {
+                // 加载成功则正确的url，或者加载失败放404的图
+                my_img.src = tmp_img.src;
+                my_img.style = 'max-height: 100%; max-width: 100%';
+                my_img.removeAttribute("data-src");
+            });
+            
+            // for debug: 
+            if(i > debug_loaded){
+                debug_loaded = i;
+            }
+        }
+        console.log(`debug_loaded = ${debug_loaded}, img_located = ${img_located}`);
     }
 
     function addElement() {
